@@ -29,7 +29,8 @@ $ psql -d news -f newsdata.sql
 ```
 
 ## PostgreSQL views
-To simplify reading the code, there are 5 views which have been created, these views are
+To simplify reading the code, there are 5 views which have been created, these views are:
+
 view_1, view_2, view_3, view_4 and view_5
 
 These view are included in the python code and will be automatically created
