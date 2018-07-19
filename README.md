@@ -2,7 +2,7 @@
 python code for udacity nanodegree project-3 Term 1  
 # Log Analysis project
 This Source code is part of Udacity nanodegree term 1 project that i have done,
-its main function is to fetch a postgress database to answer three questions,
+its main function is to fetch a postgresSQL database to answer three questions,
 these quesions are:
 
  1- **What are the most popular three articles of all time?**
@@ -28,6 +28,12 @@ this tool, use the below command to populate the news database.
 $ psql -d news -f newsdata.sql
 ```
 
+## PostgreSQL views
+To simplify reading the code, there are 5 views which have been created, these views are
+view_1, view_2, view_3, view_4 and view_5
+
+These view are included in the python code and will be automatically created
+
 ## Installation
 
 clone the github repository and use python to run the code
@@ -41,7 +47,7 @@ clone the github repository and use python to run the code
 
 If you clone or download this repository you should have the below files:
 
- 1- **ud_loganalysis.py**: Access the postgress database and fetches the tables to
+ 1- **ud_loganalysis.py**: Access the postgreSQL database and fetches the tables to
 get the answer of the 3 questions
 
  2- **newsdata.sql**: Stores the database tables.
