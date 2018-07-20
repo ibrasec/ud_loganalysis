@@ -1,6 +1,4 @@
-# ud_loganalysis
-python code for udacity nanodegree project-3 Term 1  
-# Log Analysis project
+# udacity Log Analysis project
 This Source code is part of Udacity nanodegree term 1 project that i have done,
 its main function is to fetch a postgresSQL database to answer three questions,
 these quesions are:
@@ -29,11 +27,42 @@ $ psql -d news -f newsdata.sql
 ```
 
 ## PostgreSQL views
-To simplify reading the code, there are 5 views which have been created, these views are:
+The python code depends on 5 postgreSQL views, these views has to be added to
+the (news) database before running the program
 
-view_1, view_2, view_3, view_4 and view_5
+please follow these steps:
 
-These view are included in the python code and will be automatically created
+``` 
+$ psql news
+
+CREATE VIEW AccessAllArticles AS
+SELECT substring(path,10) AS subtitle,
+count(*) AS num
+FROM log WHERE path <> '/'
+GROUP BY path ORDER BY num DESC;
+
+
+CREATE VIEW AccessRegisteredArticles AS
+SELECT articles.title, AccessAllArticles.num
+FROM articles JOIN AccessAllArticles ON articles.slug = AccessAllArticles.subtitle
+ORDER BY num DESC;
+
+CREATE VIEW AuthorsViewSummary AS
+SELECT author, sum(num)
+FROM (select articles.author , AccessRegisteredArticles.num
+FROM AccessRegisteredArticles JOIN articles ON articles.title=AccessRegisteredArticles.title) AS FOO
+GROUP BY author ORDER BY sum DESC;
+
+CREATE VIEW NotFoundStatusHistory AS
+SELECT to_char(time,'YYYY-MM-DD') AS date,count(*) AS sum_nf
+FROM log WHERE status = '404 NOT FOUND'
+GROUP BY date ORDER BY date;
+
+CREATE VIEW AllstatusHistory AS
+SELECT to_char(time,'YYYY-MM-DD') AS date,count(*) AS sum_all
+FROM log GROUP BY date ORDER BY date;
+```
+
 
 ## Installation
 
