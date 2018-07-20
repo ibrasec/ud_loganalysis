@@ -20,62 +20,31 @@
 # 3. On which days did more than 1% of requests lead to errors?
 # Example:
 #    July 29, 2016 -- 2.5% errors
+#
+# please make sure to read the README file to add the essential views
 
 import psycopg2
+import sys
 
-# view_1,view_2 and view_3 are used to help us finding the second answer
-view_1 = """
-        CREATE VIEW view_1 AS
-        SELECT substring(path,10) AS subtitle,
-        count(*) AS num
-        FROM log WHERE path <> '/'
-        GROUP BY path ORDER BY num DESC LIMIT 8;
-        """
 
-view_2 = """
-        CREATE VIEW view_2 AS
-        SELECT articles.title, view_1.num
-        FROM articles JOIN view_1 ON articles.slug = view_1.subtitle
-        ORDER BY num DESC;
-        """
-
-view_3 = """
-        CREATE VIEW view_3 AS
-        SELECT author, sum(num)
-        FROM (select articles.author , view_2.num
-        FROM view_2 JOIN articles ON articles.title=view_2.title) AS FOO
-        GROUP BY author ORDER BY sum desc;
-        """
-
-# view_4 and view_5 are used to help us finding the last answer
-view_4 = """
-        CREATE VIEW view_4 AS
-        SELECT to_char(time,'YYYY-MM-DD') AS date,count(*) AS sum_nf
-        FROM log WHERE status = '404 NOT FOUND'
-        GROUP BY date ORDER BY date;
-        """
-
-view_5 = """
-        CREATE VIEW view_5 AS
-        SELECT to_char(time,'YYYY-MM-DD') AS date,count(*) AS sum_all
-        FROM log GROUP BY date ORDER BY date;
-        """
-
+def try_connect(db='news'):
+    try:
+        psycopg2.connect("dbname="+db)
+    except psycopg2.Error as e:
+        print "Unable to connect to database", db
+        sys.exit(1)
 
 # Answering what are the most popular three articles of all time
 
 
 def most_popular_three_articles():
     print("finding the most popular three articals of all time...")
-    con = psycopg2.connect("dbname = news")
+    con = psycopg2.connect("dbname=news")
     cur = con.cursor()
-    try:
-        cur.execute(view_1)
-    except Exception as e:
-        pass
-    cur.execute("""SELECT articles.title, view_1.num
-             FROM articles JOIN view_1 ON articles.slug = view_1.subtitle
-             ORDER BY num DESC LIMIT 3""")
+    cur.execute("""SELECT articles.title, AccessAllArticles.num
+                FROM articles JOIN AccessAllArticles
+                ON articles.slug = AccessAllArticles.subtitle
+                ORDER BY num DESC LIMIT 3""")
     response = cur.fetchall()
     con.close()
     for i, j in response:
@@ -86,16 +55,11 @@ def most_popular_three_articles():
 
 def most_popular_authors():
     print("finding the most popular article authors of all time...")
-    con = psycopg2.connect("dbname = news")
+    con = psycopg2.connect("dbname=news")
     cur = con.cursor()
-    try:
-        cur.execute(view_1)
-        cur.execute(view_2)
-        cur.execute(view_3)
-    except Exception as e:
-        pass
-    cur.execute("""SELECT name,view_3.sum
-                 FROM authors JOIN view_3 ON authors.id = view_3.author
+    cur.execute("""SELECT name,AuthorsViewSummary.sum
+                 FROM authors JOIN AuthorsViewSummary
+                 ON authors.id = AuthorsViewSummary.author
                  ORDER BY sum DESC;""")
     response = cur.fetchall()
     con.close()
@@ -107,17 +71,14 @@ def most_popular_authors():
 
 def days_above_apercent_error():
     print("finding On which days more than 1% of requests lead to errors...")
-    con = psycopg2.connect("dbname = news")
+    con = psycopg2.connect("dbname=news")
     cur = con.cursor()
-    try:
-        cur.execute(view_4)
-        cur.execute(view_5)
-    except Exception as e:
-        pass
     cur.execute("""SELECT date,jumla
-                FROM (SELECT view_4.date,
-                round( (view_4.sum_nf*100.0) / view_5.sum_all, 2) AS jumla
-                FROM view_4 join view_5 on view_4.date = view_5.date
+                FROM (SELECT NotFoundStatusHistory.date,
+                round(
+                (NotFoundStatusHistory.sum_nf*100.0)/AllstatusHistory.sum_all,2
+                ) AS jumla FROM NotFoundStatusHistory JOIN AllstatusHistory
+                ON NotFoundStatusHistory.date = AllstatusHistory.date
                 ORDER BY jumla desc) AS final
                 WHERE jumla > 1.00;""")
     response = cur.fetchall()
@@ -127,6 +88,7 @@ def days_above_apercent_error():
 
 
 if __name__ == '__main__':
+    try_connect()
     most_popular_three_articles()
     print("")
     most_popular_authors()
