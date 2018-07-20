@@ -43,7 +43,6 @@ count(*) AS num
 FROM log WHERE path <> '/'
 GROUP BY path ORDER BY num DESC;
 
-
 CREATE VIEW AccessRegisteredArticles AS
 SELECT articles.title, AccessAllArticles.num
 FROM articles JOIN AccessAllArticles ON articles.slug = AccessAllArticles.subtitle
